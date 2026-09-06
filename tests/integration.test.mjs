@@ -1,7 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync, existsSync} from "node:fs";
-import {ID, state} from "../scripts/rules.mjs";
+import {ID, state, saveCustom} from "../scripts/rules.mjs";
 
 const hooks = new Map();
 globalThis.Hooks = {once: (name, fn) => hooks.set(name, fn), on: (name, fn) => hooks.set(name, fn)};
@@ -19,6 +19,27 @@ function sheet() {
   app.element = {find: () => ({val: () => "60"})};
   return app;
 }
+test('custom purchases, active benefits, loss and HQ destruction persist correctly', async () => {
+  const app=sheet();
+  app.document.hq=saveCustom(state({ip:200}),{id:'custom_room',name:'<Room>',base:'Base',upgrades:['Tier one']});
+  Dialog.confirm=async ({content})=>{assert.ok(!content.includes('<Room>'));return true;};
+  try {
+    await app.act('buy','custom_room'); await app.act('buy','custom_room');
+    const data=await app.getData();assert.equal(data.customBenefits[0].acquiredUpgrades[0],'Tier one');
+    assert.equal(data.cards.find(c=>c.id==='custom_room').maxUpgrades,1);
+    app.document.hq.access=false;assert.equal((await app.getData()).customBenefits.length,0);
+    app.document.hq.access=true;await app.act('destroy');
+    assert.equal(app.document.hq.improvements.custom_room,0);assert.equal(app.document.hq.spent,80);
+    assert.equal(app.document.hq.customImprovements.length,1);
+  } finally {Dialog.confirm=async()=>true;}
+});
+test('custom deletion is GM-only and preserves historical spending', async () => {
+  const app=sheet(); app.document.hq=saveCustom(state({spent:40}),{id:'custom_room',name:'Room',base:'Base',upgrades:[]});
+  game.user.isGM=false;
+  try {await app.act('custom-delete','custom_room');assert.equal(app.document.hq.customImprovements.length,1);}
+  finally {game.user.isGM=true;}
+  await app.act('custom-delete','custom_room');assert.equal(app.document.hq.customImprovements.length,0);assert.equal(app.document.hq.spent,40);
+});
 test("sheet purchase persists IP, rank and activity", async () => {
   const app = sheet(); await app.act("buy", "garage");
   assert.equal(app.document.hq.ip, 0); assert.equal(app.document.hq.improvements.garage, 1);

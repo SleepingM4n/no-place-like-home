@@ -21,13 +21,29 @@ export function defaults() {
 }
 export function state(raw = {}) {
   const d = defaults();
-  return {...d, ...raw, improvements: {...d.improvements, ...raw.improvements}, log: [...(raw.log ?? [])]};
+  const customImprovements = (raw.customImprovements ?? []).map(c => ({...c, upgrades: [...c.upgrades]}));
+  return {...d, ...raw, customImprovements, improvements: {...d.improvements, ...Object.fromEntries(customImprovements.map(c => [c.id, 0])), ...raw.improvements}, log: [...(raw.log ?? [])]};
 }
-export function limit(s, id) { return id === "morale" ? 11 : id === "rent" ? 1 + s.beds : 2; }
+export function catalog(s) { return [...CATALOG, ...(s.customImprovements ?? []).map(c => ({...c, custom: true}))]; }
+export function saveCustom(raw, entry) {
+  const s = state(raw);
+  if (!/^custom_[A-Za-z0-9]+$/.test(entry.id)) throw new Error("Invalid custom improvement ID.");
+  const name = String(entry.name ?? '').trim(), base = String(entry.base ?? '').trim();
+  const upgrades = Array.isArray(entry.upgrades) ? entry.upgrades.map(x => String(x).trim()).filter(Boolean) : [];
+  if (!name || name.length > 100 || !base || base.length > 4000) throw new Error("Enter a name (up to 100 characters) and benefit (up to 4000 characters).");
+  if (upgrades.length > 50 || upgrades.some(x => x.length > 4000)) throw new Error("Use at most 50 upgrades, each up to 4000 characters.");
+  if (upgrades.length < (s.improvements[entry.id] ?? 0) - 1) throw new Error("Cannot remove already purchased upgrade tiers. Record the improvement as lost first.");
+  const index = s.customImprovements.findIndex(c => c.id === entry.id);
+  const value = {id: entry.id, name, base, upgrades};
+  if (index < 0) s.customImprovements.push(value); else s.customImprovements[index] = value;
+  s.improvements[entry.id] ??= 0;
+  return s;
+}
+export function limit(s, id) { const custom = (s.customImprovements ?? []).find(c => c.id === id); return custom ? 1 + custom.upgrades.length : id === "morale" ? 11 : id === "rent" ? 1 + s.beds : 2; }
 export function purchaseError(s, id) {
   const cost = s.purchaseCost === undefined ? COST : s.purchaseCost;
   if (!Number.isSafeInteger(cost) || cost < 0) return "Purchase cost must be a non-negative whole number of HQ IP.";
-  if (!CATALOG.some(x => x.id === id)) return "Unknown improvement.";
+  if (!catalog(s).some(x => x.id === id)) return "Unknown improvement.";
   if (s.faction) return "Crew HQ IP cannot be spent on a faction HQ.";
   if (!s.access) return "Restore access before making purchases.";
   if (s.workstationDebt && id !== "workstation") return "Restore the upgraded Workstation first, or resolve the Team Member's departure.";
@@ -45,7 +61,7 @@ export function purchase(raw, id) {
 }
 export function lose(raw, id) {
   const s = state(raw);
-  if (!CATALOG.some(x => x.id === id)) throw new Error("Unknown improvement.");
+  if (!catalog(s).some(x => x.id === id)) throw new Error("Unknown improvement.");
   if (id === "workstation" && s.improvements[id] >= 2) s.workstationDebt = true;
   s.improvements[id] = 0;
   return s;

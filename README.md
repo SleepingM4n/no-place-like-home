@@ -19,7 +19,13 @@ For a manual installation:
 5. Enter the HQ name, location, crew, description, original rent and original bed count. Award the crew's accumulated HQ IP, then purchase its improvements.
 6. Right-click the journal entry, choose **Configure Ownership**, and give the appropriate players **Observer** access. New HQs are private until shared. Players can read and use benefit actions on characters they own; the GM makes crew-approved purchases.
 
-## Updating to 0.5.1
+## Custom improvements and upgrades (0.5.2)
+
+As GM, open **Improvements & Upgrades → Add custom improvement**. Enter a name, the base benefit, and one upgrade benefit per line in purchase order (up to 50). Leave upgrades blank for a base-only improvement. Saving adds a new card alongside the twelve default options without spending IP. Use **Acquire** and **Upgrade** to purchase each tier at the HQ's shared purchase cost.
+
+Acquired custom benefits appear in **Active Crew Benefits** while the crew has access. Their effects are descriptive and must be applied manually. **Edit custom** changes the definition and can add further tiers; it cannot remove tiers already purchased. **Lost** clears purchases but keeps the definition. **Delete custom** removes the custom card. Loss, deletion and HQ destruction do not refund spent IP. Creation, edits, purchases, losses and deletion are logged. Existing HQs need no migration.
+
+## Updating to 0.5.2
 
 Close Foundry and replace the existing `Data/modules/no-place-like-home/` module files with the folder in the new ZIP. Restart Foundry and reload each player's browser. Existing Headquarters data is retained; no migration or recreation is needed.
 

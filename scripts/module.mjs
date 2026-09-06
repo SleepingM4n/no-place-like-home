@@ -1,4 +1,5 @@
-import {ID, CATALOG, state, purchase, purchaseError, lose, benefits, limit} from "./rules.mjs";
+import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit} from "./rules.mjs";
+import {customDialog, escapeHTML} from "./custom-improvements.mjs";
 import {runBenefit, ownedCharacters, moraleMode} from "./character-benefits.mjs";
 import {assetData, openLink, saveDrop, setCrewSlot, createStash, syncStashOwnership, moneyDialog} from "./hq-assets.mjs";
 import {crewIPDialog} from "./crew-ip.mjs";
@@ -18,7 +19,8 @@ export class HeadquartersSheet extends DocumentSheet {
     const canUseBenefits = s.access && ownedCharacters().length > 0;
     return {name: this.document.name, s, b: benefits(s), assets: await assetData(this.document), editable: this.isEditable,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
-      cards: CATALOG.map(c => ({...c, rank: s.improvements[c.id], owned: s.improvements[c.id] > 0,
+      customBenefits: s.access ? s.customImprovements.filter(c => s.improvements[c.id] > 0).map(c => ({...c, acquiredUpgrades: c.upgrades.slice(0, s.improvements[c.id] - 1)})) : [],
+      cards: catalog(s).map(c => ({...c, customUpgrades: c.custom ? c.upgrades : [], rank: s.improvements[c.id], owned: s.improvements[c.id] > 0,
         upgraded: s.improvements[c.id] > 1, upgrades: Math.max(0, s.improvements[c.id] - 1),
         maxUpgrades: limit(s, c.id) - 1, error: purchaseError(s, c.id)})),
       log: [...s.log].reverse().slice(0, 30)};
@@ -119,12 +121,30 @@ export class HeadquartersSheet extends DocumentSheet {
     await this.submit();
     let s = state(this.document.getFlag(ID, "hq"));
     let label;
-    if (action === "buy") {
+    if (action === "custom-add" || action === "custom-edit") {
+      const entry = s.customImprovements.find(c => c.id === id);
+      if (action === "custom-edit" && !entry) throw new Error("Custom improvement no longer exists.");
+      const data = await customDialog(entry);
+      if (!data || !this.isEditable) return;
+      s = state(this.document.getFlag(ID, "hq"));
+      if (entry && !s.customImprovements.some(c => c.id === id)) throw new Error("Custom improvement was removed while editing.");
+      s = saveCustom(s, {...data, id: entry?.id ?? `custom_${foundry.utils.randomID()}`});
+      label = `${entry ? 'Edited' : 'Added'} custom improvement: ${data.name}`;
+    } else if (action === "custom-delete") {
+      const entry = s.customImprovements.find(c => c.id === id);
+      if (!entry) return;
+      if (!await Dialog.confirm({title: "Delete custom improvement", content: `<p>Delete ${escapeHTML(entry.name)} and its acquired upgrades without an HQ IP refund?</p>`})) return;
+      if (!this.isEditable) return;
+      s = state(this.document.getFlag(ID, "hq"));
+      s.customImprovements = s.customImprovements.filter(c => c.id !== id);
+      s.improvements[id] = 0;
+      label = `Deleted custom improvement: ${entry.name}; no refund`;
+    } else if (action === "buy") {
       const error = purchaseError(s, id);
       if (error) throw new Error(error);
-      const name = CATALOG.find(c => c.id === id).name;
+      const name = catalog(s).find(c => c.id === id).name;
       const cost = s.purchaseCost;
-      if (!await Dialog.confirm({title: "Crew purchase", content: `<p>Spend ${cost} HQ IP on ${name}? Confirm that the crew agrees.</p>`})) return;
+      if (!await Dialog.confirm({title: "Crew purchase", content: `<p>Spend ${cost} HQ IP on ${escapeHTML(name)}? Confirm that the crew agrees.</p>`})) return;
       const latest = state(this.document.getFlag(ID, "hq"));
       if (latest.purchaseCost !== cost) throw new Error("The purchase cost changed. Please review the new price and try again.");
       s = purchase(latest, id);
@@ -134,9 +154,9 @@ export class HeadquartersSheet extends DocumentSheet {
       if (!Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(s.ip + amount)) throw new Error("Enter a positive whole HQ IP award.");
       s.ip += amount; label = `Awarded ${amount} HQ IP; clear any practiced skill bonuses after a Group IP award`;
     } else if (action === "lose") {
-      const name = CATALOG.find(c => c.id === id)?.name;
+      const name = catalog(s).find(c => c.id === id)?.name;
       if (!name || !s.improvements[id]) return;
-      if (!await Dialog.confirm({title: "Lose improvement", content: `<p>Remove ${name} and all its upgrades without an HQ IP refund?</p>`})) return;
+      if (!await Dialog.confirm({title: "Lose improvement", content: `<p>Remove ${escapeHTML(name)} and all its upgrades without an HQ IP refund?</p>`})) return;
       s = lose(state(this.document.getFlag(ID, "hq")), id); label = `Lost ${name}; no refund`;
     } else if (action === "departure") {
       if (!await Dialog.confirm({title: "Team Member departure", content: "<p>Resolve the Workstation obligation by having the Improved Team Member leave?</p>"})) return;
@@ -144,9 +164,10 @@ export class HeadquartersSheet extends DocumentSheet {
     } else if (action === "destroy") {
       if (!await Dialog.confirm({title: "HQ destroyed", content: "<p>Lose every improvement and upgrade without refund? Unspent HQ IP remains available for the crew's next HQ.</p>"})) return;
       s = state(this.document.getFlag(ID, "hq"));
-      for (const c of CATALOG) s = lose(s, c.id);
+      for (const c of catalog(s)) s = lose(s, c.id);
       s.access = false; label = "HQ destroyed; improvements lost without refund";
     } else return;
+    if (!this.isEditable) return;
     s.log.push({date: new Date().toLocaleString(), user: game.user.name, label});
     await this.document.setFlag(ID, "hq", s);
   }

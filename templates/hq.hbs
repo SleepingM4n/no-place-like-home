@@ -60,16 +60,19 @@
     <div class="benefit-row"><p>Hustle: <b>{{b.hustle}}</b></p><button type="button" data-benefit="hustle" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-coins" aria-hidden="true"></i> Roll & earn…</button></div>
     {{#if b.negotiation}}<p>Job pay: Fixers gain +2 Trading; non-Fixers can negotiate a 20% increase as Operator 5, without a Trading bonus.</p>{{/if}}
     {{#if b.custom}}<p>Morale upgrade 10: record the crew's GM-approved unique benefit in Notes.</p>{{/if}}</div>
+    {{#if customBenefits}}<h3>Custom benefits <small>Apply effects manually</small></h3><div class="cards">{{#each customBenefits}}<article class="card owned"><h3>{{name}}</h3><p>{{base}}</p><ol>{{#each acquiredUpgrades}}<li>{{this}}</li>{{/each}}</ol></article>{{/each}}</div>{{/if}}
     <label>Notes / training expiry / projects / selected Team Member<textarea name="notes" rows="5" {{#unless editable}}disabled{{/unless}}>{{s.notes}}</textarea></label>
     </section>
     <section class="tab" data-tab="improvements" data-group="hq">
     <h2>Improvements & upgrades <small>{{s.purchaseCost}} HQ IP per purchase</small></h2>
     {{#if editable}}<label class="purchase-cost">Cost for every improvement or upgrade (HQ IP)<input type="number" name="purchaseCost" min="0" step="1" value="{{s.purchaseCost}}"><span class="hint">Default: 40. Applies to future purchases for this HQ; previous spending stays recorded at its original cost.</span></label>{{/if}}
+    {{#if editable}}<button type="button" data-action="custom-add">Add custom improvement</button><p class="hint">Create a name, base benefit and ordered upgrade benefits. Custom purchases use the same HQ IP cost; apply their effects manually.</p>{{/if}}
     <div class="cards">{{#each cards}}<article class="card {{#if owned}}owned{{/if}}">
       <header><h3>{{name}}</h3><span>{{#if owned}}Owned{{else}}Not acquired{{/if}}</span></header>
-      <p class="rank">Upgrades {{upgrades}} / {{maxUpgrades}} · DLC p. {{page}}</p>
-      <p>{{base}}</p><details {{#if upgraded}}open{{/if}}><summary>Upgrade benefit</summary><p>{{upgrade}}</p></details>
+      <p class="rank">Upgrades {{upgrades}} / {{maxUpgrades}} · {{#if custom}}Custom{{else}}DLC p. {{page}}{{/if}}</p>
+      <p>{{base}}</p>{{#if custom}}<details {{#if upgraded}}open{{/if}}><summary>Upgrade benefits (purchase order)</summary><ol>{{#each customUpgrades}}<li>{{this}}</li>{{else}}<li>No upgrades defined.</li>{{/each}}</ol></details>{{else}}<details {{#if upgraded}}open{{/if}}><summary>Upgrade benefit</summary><p>{{upgrade}}</p></details>{{/if}}
       {{#if ../editable}}<footer><button type="button" data-action="buy" data-id="{{id}}" {{#if error}}disabled title="{{error}}"{{/if}}>{{#if owned}}Upgrade{{else}}Acquire{{/if}} · {{../s.purchaseCost}} IP</button>{{#if owned}}<button type="button" class="loss" data-action="lose" data-id="{{id}}">Lost</button>{{/if}}</footer>{{#if error}}<small class="reason">{{error}}</small>{{/if}}{{/if}}
+      {{#if custom}}{{#if ../editable}}<footer><button type="button" data-action="custom-edit" data-id="{{id}}">Edit custom</button><button type="button" data-action="custom-delete" data-id="{{id}}">Delete custom</button></footer>{{/if}}{{/if}}
     </article>{{/each}}</div>
     </section>
     <section class="tab" data-tab="activity" data-group="hq">
