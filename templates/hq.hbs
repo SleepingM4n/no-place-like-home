@@ -1,0 +1,81 @@
+<form autocomplete="off">
+  <header class="hq-header"><div class="hq-title"><span>CREW DOSSIER / HEADQUARTERS</span><h1>No Place Like Home</h1>
+    <input name="name" aria-label="Headquarters name" value="{{name}}" {{#unless editable}}disabled{{/unless}}>
+    </div><div class="hq-picture">
+      {{#if s.image}}<img src="{{s.image}}" alt="Headquarters image">{{else}}<div class="image-placeholder"><i class="fas fa-building"></i><span>HQ image</span></div>{{/if}}
+      {{#if editable}}<div><button type="button" data-asset-action="image" title="Choose HQ image">Choose image</button>{{#if s.image}}<button type="button" data-asset-action="clear-image" title="Remove image">×</button>{{/if}}</div>{{/if}}
+    </div>
+  </header>
+  <nav class="hq-tabs tabs" data-group="hq" aria-label="Headquarters sections">
+    <a class="item" data-tab="info" data-group="hq" tabindex="0">HQ Info</a>
+    <a class="item" data-tab="crew" data-group="hq" tabindex="0">Crew</a>
+    <a class="item" data-tab="benefits" data-group="hq" tabindex="0">Active Crew Benefits</a>
+    <a class="item" data-tab="improvements" data-group="hq" tabindex="0">Improvements & Upgrades</a>
+    <a class="item" data-tab="activity" data-group="hq" tabindex="0">Recent Activity</a>
+  </nav>
+  <main class="hq-body">
+    {{#unless editable}}<p class="notice">Shared crew record · Your GM manages purchases and edits.</p>{{/unless}}
+    {{#unless s.access}}<p class="notice">ACCESS LOST — HQ benefits are suspended.</p>{{/unless}}
+    {{#if s.workstationDebt}}<p class="notice">Restore the upgraded Workstation before other purchases.{{#if editable}} <button type="button" data-action="departure">Resolve Team Member departure</button>{{/if}}</p>{{/if}}
+    <section class="tab" data-tab="info" data-group="hq">
+    <fieldset {{#unless editable}}disabled{{/unless}}>
+      <div class="fields"><label>Location<input name="location" value="{{s.location}}"></label><label>Crew name / notes<input name="crew" value="{{s.crew}}"></label></div>
+      <label>Description<textarea name="description" rows="2">{{s.description}}</textarea></label>
+      <div class="fields three"><label>Original monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Reduced rent (GM total, eb)<input type="number" min="0" step="1" name="reducedRent" value="{{s.reducedRent}}"></label><label>Original beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}"></label></div>
+      <div class="fields"><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label><label class="check"><input type="checkbox" name="faction" {{checked s.faction}}> NPC faction HQ (blocks crew IP spending)</label></div>
+    </fieldset>
+    <section class="stats"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{s.spent}}</strong><span>Lifetime HQ IP spent</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent</span></div><div><strong>{{b.beds}}</strong><span>Total beds</span></div></section>
+    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button><span>Award once per crew, equal to Group IP—not multiplied by members.</span></div>{{/if}}
+    </section>
+    <section class="tab" data-tab="crew" data-group="hq">
+    <section class="hq-links"><h2>Crew <small>Six spaces · click a portrait to open its sheet</small></h2>
+      <div class="crew-slots">{{#each assets.crew}}<div class="crew-slot" data-drop-zone="crew" data-slot="{{index}}">
+        <button type="button" data-open="{{uuid}}" data-available="{{#if linked}}true{{else}}false{{/if}}" {{#unless linked}}disabled{{/unless}} title="{{name}}">
+        {{#if image}}<img src="{{image}}" alt="{{name}} portrait">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></button>
+        {{#if ../editable}}{{#if uuid}}<button type="button" class="unlink" data-asset-action="clear-crew" data-slot="{{index}}" title="Unlink crew sheet">×</button>{{/if}}{{/if}}
+      </div>{{/each}}</div>
+      {{#if editable}}<div class="crew-ip-toolbar"><button type="button" data-crew-ip><i class="fas fa-star" aria-hidden="true"></i> Award crew IP</button><button type="button" data-crew-money><i class="fas fa-coins" aria-hidden="true"></i> Award crew money</button></div>{{/if}}
+      <p class="hint">The GM can drag and drop character sheets from the Actors directory into the six crew slots. Click a portrait to open its sheet.</p>
+      <div class="hq-utilities"><div class="garage-slot" data-drop-zone="garage"><h3>Garage</h3>
+        <button type="button" data-open="{{assets.garage.uuid}}" data-available="{{#if assets.garage.linked}}true{{else}}false{{/if}}" {{#unless assets.garage.linked}}disabled{{/unless}}>
+        {{#if assets.garage.image}}<img src="{{assets.garage.image}}" alt="Vehicle">{{else}}<i class="fas fa-car"></i>{{/if}}<span>{{assets.garage.name}}</span></button>
+        {{#if editable}}<p class="hint">Drop a vehicle Item or vehicle Actor sheet here.</p>{{#if s.garageUuid}}<button type="button" data-asset-action="clear-garage">Unlink vehicle</button>{{/if}}{{/if}}
+      </div><div class="shared-stash"><h3>Shared stash</h3>
+        {{#if assets.stash}}<p><strong>{{assets.stash.balance}}eb</strong> · {{assets.stash.count}} item entries</p>
+        <button type="button" data-open="{{s.stashUuid}}" data-available="true">Open item storage</button>
+        <div class="stash-money"><button type="button" data-money="deposit" data-available="{{assets.stash.canTransfer}}" {{#unless assets.stash.canTransfer}}disabled{{/unless}}>Deposit eb</button><button type="button" data-money="withdraw" data-available="{{assets.stash.canTransfer}}" {{#unless assets.stash.canTransfer}}disabled{{/unless}}>Withdraw eb</button></div>
+        <p class="hint">Store items by dragging them into the stash sheet. Retrieve using its item transfer controls and selected character.</p>
+        {{else}}<p class="hint">{{#if assets.stashMissing}}The linked stash is missing.{{else}}The GM can create shared storage here.{{/if}}</p>{{/if}}
+        {{#if editable}}{{#if s.stashUuid}}<button type="button" data-asset-action="sync-stash">Sync player access</button>{{/if}}{{#unless assets.stash}}<button type="button" data-asset-action="create-stash">Create shared stash</button>{{/unless}}{{/if}}
+      </div></div>
+    </section>
+    </section>
+    <section class="tab" data-tab="benefits" data-group="hq">
+    <h2>Active crew benefits</h2>
+    <p class="hint">Choose a character you own when using an action. Healing, Humanity and Hustle update that character automatically. Apply other conditional bonuses manually.</p>
+    <div class="benefits">
+    <div class="benefit-row"><p>Natural healing: <b>BODY +{{b.healing}}</b></p><button type="button" data-benefit="heal" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-heart" aria-hidden="true"></i> Heal…</button></div>
+    <p>LUCK increase: <b>+{{b.luck}}</b></p><p>Lifestyle saving: <b>{{b.lifestyle}}eb / member / month</b></p>
+    <div class="benefit-row"><p>Monthly Humanity: <b>{{b.humanity}}</b></p><button type="button" data-benefit="humanity" {{#unless canRecoverHumanity}}disabled{{/unless}}><i class="fas fa-dice" aria-hidden="true"></i> Roll & restore…</button></div>
+    <div class="benefit-row"><p>Hustle: <b>{{b.hustle}}</b></p><button type="button" data-benefit="hustle" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-coins" aria-hidden="true"></i> Roll & earn…</button></div>
+    {{#if b.negotiation}}<p>Job pay: Fixers gain +2 Trading; non-Fixers can negotiate a 20% increase as Operator 5, without a Trading bonus.</p>{{/if}}
+    {{#if b.custom}}<p>Morale upgrade 10: record the crew's GM-approved unique benefit in Notes.</p>{{/if}}</div>
+    <label>Notes / training expiry / projects / selected Team Member<textarea name="notes" rows="5" {{#unless editable}}disabled{{/unless}}>{{s.notes}}</textarea></label>
+    </section>
+    <section class="tab" data-tab="improvements" data-group="hq">
+    <h2>Improvements & upgrades <small>{{s.purchaseCost}} HQ IP per purchase</small></h2>
+    {{#if editable}}<label class="purchase-cost">Cost for every improvement or upgrade (HQ IP)<input type="number" name="purchaseCost" min="0" step="1" value="{{s.purchaseCost}}"><span class="hint">Default: 40. Applies to future purchases for this HQ; previous spending stays recorded at its original cost.</span></label>{{/if}}
+    <div class="cards">{{#each cards}}<article class="card {{#if owned}}owned{{/if}}">
+      <header><h3>{{name}}</h3><span>{{#if owned}}Owned{{else}}Not acquired{{/if}}</span></header>
+      <p class="rank">Upgrades {{upgrades}} / {{maxUpgrades}} · DLC p. {{page}}</p>
+      <p>{{base}}</p><details {{#if upgraded}}open{{/if}}><summary>Upgrade benefit</summary><p>{{upgrade}}</p></details>
+      {{#if ../editable}}<footer><button type="button" data-action="buy" data-id="{{id}}" {{#if error}}disabled title="{{error}}"{{/if}}>{{#if owned}}Upgrade{{else}}Acquire{{/if}} · {{../s.purchaseCost}} IP</button>{{#if owned}}<button type="button" class="loss" data-action="lose" data-id="{{id}}">Lost</button>{{/if}}</footer>{{#if error}}<small class="reason">{{error}}</small>{{/if}}{{/if}}
+    </article>{{/each}}</div>
+    </section>
+    <section class="tab" data-tab="activity" data-group="hq">
+    <h2>Recent activity</h2><ol class="log">{{#each log}}<li><b>{{label}}</b><br><small>{{date}} · {{user}}</small></li>{{else}}<li>No purchases or awards yet.</li>{{/each}}</ol>
+    {{#if editable}}<button type="button" data-action="destroy" class="destroy">Record HQ destruction</button>{{/if}}
+    <p class="source">Unofficial companion to R. Talsorian Games' No Place Like Home (2024). Refer to your DLC and core rulebook for complete rules.</p>
+    </section>
+  </main>
+</form>

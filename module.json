@@ -1,0 +1,11 @@
+{
+  "id": "no-place-like-home",
+  "title": "No Place Like Home - Headquarters",
+  "description": "A shared Headquarters record sheet for the Cyberpunk RED No Place Like Home DLC.",
+  "version": "0.5.1",
+  "compatibility": { "minimum": "12", "verified": "12", "maximum": "12" },
+  "authors": [{ "name": "Sleepingman" }],
+  "esmodules": ["scripts/module.mjs"],
+  "styles": ["styles/hq.css"],
+  "relationships": { "systems": [{ "id": "cyberpunk-red-core", "type": "system" }] }
+}
