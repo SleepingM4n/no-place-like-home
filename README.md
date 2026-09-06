@@ -4,6 +4,14 @@ Unofficial shared Headquarters sheet based on the **No Place Like Home** Cyberpu
 
 ## Install
 
+In Foundry's **Add-on Modules → Install Module**, paste this manifest URL:
+
+```text
+https://github.com/SleepingM4n/no-place-like-home/releases/latest/download/module.json
+```
+
+For a manual installation:
+
 1. Close Foundry. Extract `no-place-like-home.zip` into your Foundry user data `Data/modules/` folder.
 2. Check that the result is `Data/modules/no-place-like-home/module.json` (no double nesting).
 3. Start Foundry, open your Cyberpunk RED world, and enable **No Place Like Home - Headquarters** in **Manage Modules**.
