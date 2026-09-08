@@ -1,11 +1,9 @@
-# No Place Like Home v0.5.2
+# No Place Like Home v0.5.3
 
-By Sleepingman. Adds custom improvements and ordered upgrade tiers alongside the twelve default options.
+By Sleepingman. Adds a Pay lifestyle button beside Lifestyle saving in Active Crew Benefits.
 
-In Improvements & Upgrades, the GM can select Add custom improvement, enter a name and base benefit, and write one upgrade benefit per line. Custom cards support acquisition, upgrades, editing, loss and deletion. Purchases use the shared HQ IP price and are recorded in Recent Activity. Acquired descriptions appear in Active Crew Benefits; effects are applied manually.
+Choose an owned character, review their detected lifestyle item and confirm one monthly payment. Supports Kibble (100eb), Generic Prepak (300eb), Good Prepak (600eb) and Fresh Food (1500eb). Active Morale Boost subtracts 50eb. Multiple matching lifestyle types offer a choice. Payment checks funds and permissions, updates the Eurobucks ledger and posts a chat receipt. No automatic monthly lock.
 
-All existing features and HQ data are preserved. Foundry minimum/verified/maximum remains 12. Targets Cyberpunk RED Core 0.92.4.
+All existing features and data are preserved. Foundry v12 only; Cyberpunk RED Core 0.92.4. 68 automated tests pass.
 
-Validation: 63 automated tests and simulated tab-layout checks pass. Live Foundry verification remains necessary.
-
-Install manifest: https://github.com/SleepingM4n/no-place-like-home/releases/latest/download/module.json
+2026-09-08 — Changelog: Added Pay lifestyle to select an owned character, detect their lifestyle item, apply the 50eb Morale Boost discount, and debit the monthly cost from their Eurobucks ledger.

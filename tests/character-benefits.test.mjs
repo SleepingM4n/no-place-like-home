@@ -2,7 +2,7 @@ import {test, beforeEach} from "node:test";
 import assert from "node:assert/strict";
 import {state} from "../scripts/rules.mjs";
 import {HUSTLES, hustleResult, moraleMode, recover, healingAmount, ownedCharacters, requireCharacter, roleTable,
-  applyHealing, applyHumanity, applyHustle, escapeHTML} from "../scripts/character-benefits.mjs";
+  applyHealing, applyHumanity, applyHustle, applyLifestyle, lifestyleOptions, LIFESTYLES, runBenefit, escapeHTML} from "../scripts/character-benefits.mjs";
 
 let actor, doc, messages, warnings, dice, formulas;
 const role = {id: "solo", type: "role", name: "Solo", system: {rank: 4}};
@@ -19,6 +19,50 @@ beforeEach(() => {
   globalThis.Roll = class {constructor(formula) {this.formula = formula; formulas.push(formula);} async evaluate() {this.total = dice.shift(); return this;} async toMessage(data) {messages.push({...data, total: this.total});}};
 });
 
+test('lifestyle prices debit all four tiers with and without the Morale discount', async () => {
+  for (const morale of [0,1,11]) for (const lifestyle of LIFESTYLES) {
+    doc.hq.improvements.morale=morale;actor.items=new Map([['life',{name:lifestyle.name}]]);
+    actor.system.wealth={value:2000,transactions:[['Old','entry']]};
+    const amount=lifestyle.cost-(morale?50:0);
+    await applyLifestyle(doc,actor.id,lifestyle.name,amount);
+    assert.equal(actor.system.wealth.value,2000-amount);
+    assert.deepEqual(actor.system.wealth.transactions[0],['Old','entry']);
+    assert.match(actor.system.wealth.transactions[1][1],new RegExp(lifestyle.name));
+  }
+});
+test('lifestyle detection ignores case and surrounding spaces and deduplicates matches', () => {
+  actor.items=new Map([['a',{name:' kibble '}],['b',{name:'KIBBLE'}],['c',{name:'Fresh Food'}],['d',{name:'Kibble bag'}]]);
+  assert.deepEqual(lifestyleOptions(actor,doc.hq).map(x=>x.name),['Kibble','Fresh Food']);
+});
+test('lifestyle rejects insufficient funds, removed items, changed discount and revoked permissions', async () => {
+  actor.items.set('life',{name:'Good Prepak'});
+  await assert.rejects(applyLifestyle(doc,actor.id,'Good Prepak',600),/Not enough/);
+  actor.system.wealth.value=1000;doc.hq.improvements.morale=1;
+  await assert.rejects(applyLifestyle(doc,actor.id,'Good Prepak',600),/changed/);
+  await assert.rejects(applyLifestyle(doc,actor.id,'Kibble',50),/no longer/);
+  actor.isOwner=false;await assert.rejects(applyLifestyle(doc,actor.id,'Good Prepak',550),/own/);
+  actor.isOwner=true;doc.hq.access=false;await assert.rejects(applyLifestyle(doc,actor.id,'Good Prepak',550),/access is lost/);
+  doc.hq.access=true;doc.testUserPermission=()=>false;await assert.rejects(applyLifestyle(doc,actor.id,'Good Prepak',550),/HQ record/);
+  assert.equal(actor.lastUpdate,undefined);
+});
+test('lifestyle failed writes and malformed ledgers do not report a payment', async () => {
+  actor.items.set('life',{name:'Kibble'});actor.system.wealth.transactions=[null];
+  await assert.rejects(applyLifestyle(doc,actor.id,'Kibble',100),/ledger/);
+  actor.system.wealth.transactions=[];actor.update=async()=>{throw new Error('Failed write');};
+  await assert.rejects(applyLifestyle(doc,actor.id,'Kibble',100),/Failed write/);
+  assert.equal(messages.length,0);
+});
+test('lifestyle UI cancellation makes no debit and selected item determines the payment', async () => {
+  actor.items.set('a',{name:'Kibble'});actor.items.set('b',{name:'Fresh Food'});actor.system.wealth.value=2000;
+  let cancel=true;
+  globalThis.Dialog=class {constructor(config){this.config=config;}render(){
+    if(this.config.title==='Pay monthly lifestyle') this.config.buttons.apply.callback({find:()=>({val:()=>actor.id})});
+    else if(cancel) this.config.buttons.cancel.callback();
+    else this.config.buttons.apply.callback({find:()=>({val:()=> 'Fresh Food'})});
+  }};
+  await runBenefit(doc,'lifestyle');assert.equal(actor.system.wealth.value,2000);
+  cancel=false;await runBenefit(doc,'lifestyle');assert.equal(actor.system.wealth.value,500);
+});
 test("heals BODY plus stacked HQ bonuses over multiple days and caps at maximum", async () => {
   doc.hq.improvements.medbay = 1; doc.hq.improvements.morale = 3;
   await applyHealing(doc, actor.id, 2); assert.equal(actor.system.derivedStats.hp.value, 28);

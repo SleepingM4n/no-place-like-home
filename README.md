@@ -1,10 +1,10 @@
-# No Place Like Home — Foundry Headquarters
+# No Place Like Home â€” Foundry Headquarters
 
 Unofficial shared Headquarters sheet based on the **No Place Like Home** Cyberpunk RED DLC, August 2024. Targets **Foundry VTT 12 stable (user build 343)** with **Cyberpunk RED Core 0.92.4** (`cyberpunk-red-core`). This is an HQ record in Journals, not a replacement for an edgerunner Actor sheet.
 
 ## Install
 
-In Foundry's **Add-on Modules → Install Module**, paste this manifest URL:
+In Foundry's **Add-on Modules â†’ Install Module**, paste this manifest URL:
 
 ```text
 https://github.com/SleepingM4n/no-place-like-home/releases/latest/download/module.json
@@ -21,11 +21,11 @@ For a manual installation:
 
 ## Custom improvements and upgrades (0.5.2)
 
-As GM, open **Improvements & Upgrades → Add custom improvement**. Enter a name, the base benefit, and one upgrade benefit per line in purchase order (up to 50). Leave upgrades blank for a base-only improvement. Saving adds a new card alongside the twelve default options without spending IP. Use **Acquire** and **Upgrade** to purchase each tier at the HQ's shared purchase cost.
+As GM, open **Improvements & Upgrades â†’ Add custom improvement**. Enter a name, the base benefit, and one upgrade benefit per line in purchase order (up to 50). Leave upgrades blank for a base-only improvement. Saving adds a new card alongside the twelve default options without spending IP. Use **Acquire** and **Upgrade** to purchase each tier at the HQ's shared purchase cost.
 
 Acquired custom benefits appear in **Active Crew Benefits** while the crew has access. Their effects are descriptive and must be applied manually. **Edit custom** changes the definition and can add further tiers; it cannot remove tiers already purchased. **Lost** clears purchases but keeps the definition. **Delete custom** removes the custom card. Loss, deletion and HQ destruction do not refund spent IP. Creation, edits, purchases, losses and deletion are logged. Existing HQs need no migration.
 
-## Updating to 0.5.2
+## Updating to 0.5.3
 
 Close Foundry and replace the existing `Data/modules/no-place-like-home/` module files with the folder in the new ZIP. Restart Foundry and reload each player's browser. Existing Headquarters data is retained; no migration or recreation is needed.
 
@@ -35,11 +35,11 @@ Version 0.3.1 displays character-sheet portraits in crew slots and places Active
 
 The HQ name and image banner stays visible above five tabs:
 
-1. **HQ Info** — location, crew name/notes, description, rent, beds, access settings, HQ IP totals and Award HQ IP.
-2. **Crew** — six portraits, drag-and-drop guidance, crew IP/money awards, garage and shared stash.
-3. **Active Crew Benefits** — healing, Humanity, Hustle and other benefits, plus project/training notes.
-4. **Improvements & Upgrades** — custom purchase cost and all improvement/upgrade cards.
-5. **Recent Activity** — activity log and the GM's HQ destruction control.
+1. **HQ Info** â€” location, crew name/notes, description, rent, beds, access settings, HQ IP totals and Award HQ IP.
+2. **Crew** â€” six portraits, drag-and-drop guidance, crew IP/money awards, garage and shared stash.
+3. **Active Crew Benefits** â€” healing, Humanity, Hustle and other benefits, plus project/training notes.
+4. **Improvements & Upgrades** â€” custom purchase cost and all improvement/upgrade cards.
+5. **Recent Activity** â€” activity log and the GM's HQ destruction control.
 
 Uses Foundry v12's native sheet tabs, starting on HQ Info. Existing HQ data, player permissions and action behavior are preserved. Tab labels also support Enter/Space keyboard activation.
 
@@ -54,7 +54,7 @@ As GM, click **Award crew IP** directly below the six crew slots. The popup list
 The existing **Award HQ IP** button still manages the HQ pool separately. All other features, maker credit and Foundry v12 compatibility remain unchanged. If a character update fails, a notification lists successful and failed recipients so successful awards are not accidentally repeated. Use one GM award operation at a time across clients.
 
 - **HQ image:** as GM, click **Choose image** at the top-right corner. Foundry's image picker lets you select an existing image or upload one if your host permits uploads. Removing an image clears the reference, not the image file.
-- **Crew:** the GM drags Actors from the Actors directory into any of six slots. Each slot shows the Actor's character-sheet portrait. Character and mook Actors are supported, with one link per Actor. Clicking a portrait opens its sheet with the viewer's existing permissions. The × unlinks it without deleting the Actor. Existing crew text remains in the Crew name / notes field.
+- **Crew:** the GM drags Actors from the Actors directory into any of six slots. Each slot shows the Actor's character-sheet portrait. Character and mook Actors are supported, with one link per Actor. Clicking a portrait opens its sheet with the viewer's existing permissions. The Ã— unlinks it without deleting the Actor. Existing crew text remains in the Crew name / notes field.
 - **Garage:** drag a vehicle Item (from the Items directory or an actor's inventory), or an Actor representing a vehicle, onto the garage slot. Cyberpunk RED 0.92.4 uses vehicle Items rather than a separate vehicle Actor type. Clicking opens the linked sheet. This reference does not purchase the Garage improvement or transfer ownership of a vehicle.
 - Links store world UUIDs; compendium documents must be imported first. Deleted links display a missing-sheet notice. Linking never grants access to a previously private character or vehicle.
 
@@ -74,9 +74,9 @@ Version 0.3.0 adds unit coverage for slot limits, links, permission handling, st
 
 The **Active crew benefits** section has three buttons. Players need Observer access to the HQ journal and Owner permission on a **Character** actor. Each action opens a character selector showing only owned characters; mooks and other actor types are excluded. Lost HQ access disables the actions.
 
-- **Heal…**: choose a character and enter the number of completed healing days. Restores `(current BODY + active HQ healing bonus) × days`, capped at the character's maximum HP. Medbay and Morale healing bonuses stack. Stabilization, sufficient rest and critical injury treatment are still adjudicated normally.
-- **Roll & restore…**: roll the current monthly Morale Humanity benefit and add it to the selected character. Uses the system's cyberware-adjusted maximum Humanity and updates EMP. Available from Morale upgrade 1; upgrades 4 and 9 replace the formula. This is an in-game monthly benefit: there is no automatic calendar or once-per-month lock, so use it once per eligible month.
-- **Roll & earn…**: choose a character, then an owned Role item. Rank is read from the item. Standard core Roles are recognized by name, original translated name or compendium source; a table selector supports renamed/custom Roles. Rolls the core Hustle table for one seven-day period. Morale upgrades 6–7 let the player choose either of two results; upgrades 8–10 pay both. The money and a transaction are added together to the character's Eurobucks ledger. Cancelling the result choice pays nothing; the rolled dice remain in chat.
+- **Healâ€¦**: choose a character and enter the number of completed healing days. Restores `(current BODY + active HQ healing bonus) Ã— days`, capped at the character's maximum HP. Medbay and Morale healing bonuses stack. Stabilization, sufficient rest and critical injury treatment are still adjudicated normally.
+- **Roll & restoreâ€¦**: roll the current monthly Morale Humanity benefit and add it to the selected character. Uses the system's cyberware-adjusted maximum Humanity and updates EMP. Available from Morale upgrade 1; upgrades 4 and 9 replace the formula. This is an in-game monthly benefit: there is no automatic calendar or once-per-month lock, so use it once per eligible month.
+- **Roll & earnâ€¦**: choose a character, then an owned Role item. Rank is read from the item. Standard core Roles are recognized by name, original translated name or compendium source; a table selector supports renamed/custom Roles. Rolls the core Hustle table for one seven-day period. Morale upgrades 6â€“7 let the player choose either of two results; upgrades 8â€“10 pay both. The money and a transaction are added together to the character's Eurobucks ledger. Cancelling the result choice pays nothing; the rolled dice remain in chat.
 
 Dice and applied results are posted to chat. The buttons block double-clicks while an action runs, and character actions are serialized within a client. Avoid simultaneous edits to the same character from different clients. Downtime is not advanced automatically, and the module does not check whether healing days overlap a Hustle week.
 
@@ -125,8 +125,16 @@ For 0.2.0, test as a player with Observer HQ access: heal an owned damaged chara
 
 Module maker: **Sleepingman**. The module manifest declares Foundry VTT 12 as its minimum, verified and maximum version.
 
-Rules: **No Place Like Home**, writing/design by James Hutt and J Gray, © 2024 R. Talsorian Games. Cyberpunk is a registered trademark of CD Projekt Red S.A. This is an unofficial fan tool with original code and paraphrased reminders, not an endorsed product. The DLC PDF, artwork and fiction are not bundled. Consult your own DLC and Cyberpunk RED core rulebook for complete rules.
+Rules: **No Place Like Home**, writing/design by James Hutt and J Gray, Â© 2024 R. Talsorian Games. Cyberpunk is a registered trademark of CD Projekt Red S.A. This is an unofficial fan tool with original code and paraphrased reminders, not an endorsed product. The DLC PDF, artwork and fiction are not bundled. Consult your own DLC and Cyberpunk RED core rulebook for complete rules.
 
 Foundry API references: https://foundryvtt.com/api/v12/classes/client.DocumentSheet.html and https://foundryvtt.com/api/v12/classes/client.DocumentSheetConfig.html.
 
-System integration reference: https://gitlab.com/cyberpunk-red-team/fvtt-cyberpunk-red-core/-/tree/v0.92.4/src/modules/actor. Hustle payout mechanics were checked against the user's Cyberpunk RED core rulebook, pp. 382–385; the original table prose and PDF are not distributed.
+System integration reference: https://gitlab.com/cyberpunk-red-team/fvtt-cyberpunk-red-core/-/tree/v0.92.4/src/modules/actor. Hustle payout mechanics were checked against the user's Cyberpunk RED core rulebook, pp. 382â€“385; the original table prose and PDF are not distributed.
+
+## Monthly lifestyle payment (0.5.3)
+
+Use **Active Crew Benefits → Pay lifestyle** to choose a character you own, review the detected lifestyle and confirm payment for one month. Matching ignores case and surrounding spaces. The character must have an item named Kibble (100eb), Generic Prepak (300eb), Good Prepak (600eb), or Fresh Food (1500eb). If multiple types are present, select one; duplicate items do not multiply the charge.
+
+An active Morale Boost subtracts 50eb, resulting in 50/250/550/1450eb respectively. Without Morale Boost, the full price applies. The payment updates the Eurobucks balance and ledger together and posts a chat receipt. Insufficient funds, missing items, lost HQ access or revoked permissions stop payment. Each click pays one month; no calendar or once-per-month limit is enforced. Existing features and HQ data are retained.
+
+2026-09-08 — Changelog: Added Pay lifestyle to select an owned character, detect their lifestyle item, apply the 50eb Morale Boost discount, and debit the monthly cost from their Eurobucks ledger.

@@ -69,14 +69,14 @@ function prompt({title, content, read, render, label = "Apply"}) {
 async function selectCharacter(action) {
   const actors = ownedCharacters();
   if (!actors.length) throw new Error("You do not own any Cyberpunk RED characters.");
-  const title = {heal: "Natural healing", humanity: "Monthly Humanity recovery", hustle: "Weekly Hustle"}[action];
+  const title = {heal: "Natural healing", humanity: "Monthly Humanity recovery", hustle: "Weekly Hustle", lifestyle: "Pay monthly lifestyle"}[action];
   const options = actors.map(a => `<option value="${escapeHTML(a.id)}">${escapeHTML(a.name)}</option>`).join("");
   const extra = action === "heal"
     ? '<label>Days of healing<input name="days" type="number" min="1" step="1" value="1"></label><p>Use completed days of natural recovery after stabilization. Critical injuries still need their normal treatment.</p>'
     : action === "humanity" ? '<p>Use once per in-game month, up to your cyberware-adjusted maximum Humanity. This button does not advance or track a campaign calendar.</p>'
-      : '<p>One Hustle represents seven free days. Next, choose which owned Role to use.</p>';
+      : action === "lifestyle" ? '<p>Pay for one in-game month. The next step detects lifestyle items on this character and shows the HQ discount and payment. Payments are not limited by a campaign calendar.</p>' : '<p>One Hustle represents seven free days. Next, choose which owned Role to use.</p>';
   return prompt({title, content: `<label>Character<select name="actor">${options}</select></label>${extra}`,
-    label: action === "heal" ? "Heal character" : action === "humanity" ? "Roll & restore Humanity" : "Choose Role",
+    label: action === "heal" ? "Heal character" : action === "humanity" ? "Roll & restore Humanity" : action === "lifestyle" ? "Review payment" : "Choose Role",
     read: html => ({actorId: html.find('[name="actor"]').val(), days: Number(html.find('[name="days"]').val())})});
 }
 async function selectRole(actor) {
@@ -162,14 +162,44 @@ export async function applyHustle(doc, actorId, {roleId, table}, choose) {
   return {amount, outcomes};
 }
 
+export const LIFESTYLES = [{name: "Kibble", cost: 100}, {name: "Generic Prepak", cost: 300}, {name: "Good Prepak", cost: 600}, {name: "Fresh Food", cost: 1500}];
+export function lifestyleOptions(actor, raw) {
+  const names = new Set(Array.from(actor.items.values()).map(item => String(item.name ?? '').trim().toLowerCase()));
+  const discount = benefits(raw).lifestyle;
+  return LIFESTYLES.filter(item => names.has(item.name.toLowerCase())).map(item => ({...item, discount, amount: Math.max(0, item.cost - discount)}));
+}
+export async function applyLifestyle(doc, actorId, name, expectedAmount) {
+  const s = requireAccess(doc), actor = requireCharacter(actorId);
+  const option = lifestyleOptions(actor, s).find(item => item.name === name);
+  if (!option) throw new Error("The selected lifestyle item is no longer on this character's sheet.");
+  if (option.amount !== expectedAmount) throw new Error("The lifestyle price or HQ discount changed. Review the payment again.");
+  const wealth = actor.system.wealth;
+  if (!Number.isSafeInteger(wealth?.value) || !Array.isArray(wealth.transactions) || !wealth.transactions.every(Array.isArray)) throw new Error("Cannot read this character's Eurobucks ledger.");
+  if (wealth.value < option.amount) throw new Error(`Not enough Eurobucks: ${option.amount}eb required, ${wealth.value}eb available.`);
+  const balance = wealth.value - option.amount;
+  const reason = `Monthly lifestyle: ${option.name}, ${option.cost}eb minus ${option.discount}eb HQ discount. ${doc.name} — ${game.user.name}`;
+  await actor.update({"system.wealth.value": balance, "system.wealth.transactions": [...wealth.transactions.map(row => [...row]), [`Decreased wealth by ${option.amount} to ${balance}.`, reason]]});
+  await report(actor, `Paid ${option.amount}eb for one month of ${option.name} (${option.cost}eb − ${option.discount}eb HQ discount). Balance: ${balance}eb.`);
+  return {...option, balance};
+}
+
 export async function runBenefit(doc, action) {
-  if (!["heal", "humanity", "hustle"].includes(action)) throw new Error("Unknown benefit action.");
+  if (!["heal", "humanity", "hustle", "lifestyle"].includes(action)) throw new Error("Unknown benefit action.");
   requireAccess(doc);
   const selection = await selectCharacter(action);
   if (!selection) return;
   return locked(selection.actorId, async () => {
     if (action === "heal") return applyHealing(doc, selection.actorId, selection.days);
     if (action === "humanity") return applyHumanity(doc, selection.actorId);
+    if (action === "lifestyle") {
+      const actor = requireCharacter(selection.actorId), options = lifestyleOptions(actor, requireAccess(doc));
+      if (!options.length) throw new Error("No lifestyle item found. Add an item named Kibble, Generic Prepak, Good Prepak or Fresh Food to the character sheet.");
+      const chosen = await prompt({title: `${actor.name} — Monthly lifestyle`, label: "Pay selected lifestyle",
+        content: `<p>Balance: ${escapeHTML(actor.system.wealth?.value)}eb. Pay for one month.</p><label>Lifestyle found on character<select name="lifestyle">${options.map(o => `<option value="${escapeHTML(o.name)}">${o.name}: ${o.cost}eb − ${o.discount}eb discount = ${o.amount}eb</option>`).join('')}</select></label><p>If multiple lifestyle items are present, select the one to pay. Each payment adds an entry to the character's Eurobucks ledger.</p>`,
+        read: html => html.find('[name="lifestyle"]').val()});
+      if (chosen === null) return;
+      return applyLifestyle(doc, selection.actorId, chosen, options.find(o => o.name === chosen)?.amount);
+    }
     const role = await selectRole(requireCharacter(selection.actorId));
     if (!role) return;
     return applyHustle(doc, selection.actorId, role, outcomes => prompt({title: "Choose your Hustle result", label: "Credit selected income",

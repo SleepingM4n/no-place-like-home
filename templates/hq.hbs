@@ -55,7 +55,7 @@
     <p class="hint">Choose a character you own when using an action. Healing, Humanity and Hustle update that character automatically. Apply other conditional bonuses manually.</p>
     <div class="benefits">
     <div class="benefit-row"><p>Natural healing: <b>BODY +{{b.healing}}</b></p><button type="button" data-benefit="heal" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-heart" aria-hidden="true"></i> Heal…</button></div>
-    <p>LUCK increase: <b>+{{b.luck}}</b></p><p>Lifestyle saving: <b>{{b.lifestyle}}eb / member / month</b></p>
+    <p>LUCK increase: <b>+{{b.luck}}</b></p><div class="benefit-row"><p>Lifestyle saving: <b>{{b.lifestyle}}eb / member / month</b></p><button type="button" data-benefit="lifestyle" {{#unless canUseBenefits}}disabled{{/unless}}>Pay lifestyle…</button></div>
     <div class="benefit-row"><p>Monthly Humanity: <b>{{b.humanity}}</b></p><button type="button" data-benefit="humanity" {{#unless canRecoverHumanity}}disabled{{/unless}}><i class="fas fa-dice" aria-hidden="true"></i> Roll & restore…</button></div>
     <div class="benefit-row"><p>Hustle: <b>{{b.hustle}}</b></p><button type="button" data-benefit="hustle" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-coins" aria-hidden="true"></i> Roll & earn…</button></div>
     {{#if b.negotiation}}<p>Job pay: Fixers gain +2 Trading; non-Fixers can negotiate a 20% increase as Operator 5, without a Trading bonus.</p>{{/if}}
