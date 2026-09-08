@@ -21,10 +21,10 @@
     <fieldset {{#unless editable}}disabled{{/unless}}>
       <div class="fields"><label>Location<input name="location" value="{{s.location}}"></label><label>Crew name / notes<input name="crew" value="{{s.crew}}"></label></div>
       <label>Description<textarea name="description" rows="2">{{s.description}}</textarea></label>
-      <div class="fields three"><label>Original monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Reduced rent (GM total, eb)<input type="number" min="0" step="1" name="reducedRent" value="{{s.reducedRent}}"></label><label>Original beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}"></label></div>
+      <div class="fields three"><label>Original monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Reduced rent (discount, eb)<input type="number" min="0" step="1" name="reducedRent" value="{{s.reducedRent}}"></label><label>Original beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}"></label></div>
       <div class="fields"><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label><label class="check"><input type="checkbox" name="faction" {{checked s.faction}}> NPC faction HQ (blocks crew IP spending)</label></div>
     </fieldset>
-    <section class="stats"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{s.spent}}</strong><span>Lifetime HQ IP spent</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent</span></div><div><strong>{{b.beds}}</strong><span>Total beds</span></div></section>
+    <section class="stats"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{s.spent}}</strong><span>Lifetime HQ IP spent</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent</span><button type="button" data-money="rent" data-available="{{assets.stash.canPayRent}}" {{#unless assets.stash.canPayRent}}disabled{{/unless}}>Pay</button></div><div><strong>{{b.beds}}</strong><span>Total beds</span></div></section>
     {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button><span>Award once per crew, equal to Group IP—not multiplied by members.</span></div>{{/if}}
     </section>
     <section class="tab" data-tab="crew" data-group="hq">

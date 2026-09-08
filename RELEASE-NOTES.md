@@ -1,9 +1,5 @@
-# No Place Like Home v0.5.3
+# No Place Like Home v0.5.4
 
-By Sleepingman. Adds a Pay lifestyle button beside Lifestyle saving in Active Crew Benefits.
+Adds Pay inside the Monthly rent square on HQ Info. Rent equals Original monthly rent minus Reduced rent, floored at zero. Payment debits only the linked native HQ stash and records a ledger entry. Review existing Reduced rent values: they now represent a discount. Each payment covers one month without a calendar lock. All other features preserved. 74 automated tests and simulated tab checks pass. Foundry v12 only, by Sleepingman.
 
-Choose an owned character, review their detected lifestyle item and confirm one monthly payment. Supports Kibble (100eb), Generic Prepak (300eb), Good Prepak (600eb) and Fresh Food (1500eb). Active Morale Boost subtracts 50eb. Multiple matching lifestyle types offer a choice. Payment checks funds and permissions, updates the Eurobucks ledger and posts a chat receipt. No automatic monthly lock.
-
-All existing features and data are preserved. Foundry v12 only; Cyberpunk RED Core 0.92.4. 68 automated tests pass.
-
-2026-09-08 — Changelog: Added Pay lifestyle to select an owned character, detect their lifestyle item, apply the 50eb Morale Boost discount, and debit the monthly cost from their Eurobucks ledger.
+2026-09-08 - Changelog: Added Pay inside the Monthly rent square on HQ Info; rent is Original monthly rent minus Reduced rent (minimum zero), and payment debits only the linked HQ stash. Existing Reduced rent values now represent discounts.

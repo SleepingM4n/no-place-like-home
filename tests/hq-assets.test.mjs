@@ -1,7 +1,7 @@
 import {test, beforeEach} from 'node:test';
 import assert from 'node:assert/strict';
-import {ID, state} from '../scripts/rules.mjs';
-import {crewSlots, setCrewSlot, saveDrop, linkView, stashOwnership, createStash, syncStashOwnership, transferMoney, openLink} from '../scripts/hq-assets.mjs';
+import {ID, state, benefits} from '../scripts/rules.mjs';
+import {crewSlots, setCrewSlot, saveDrop, linkView, stashOwnership, createStash, syncStashOwnership, transferMoney, openLink, payRent} from '../scripts/hq-assets.mjs';
 let hq, actor, stash, docs;
 function wallet(uuid, type, value) {
   return {uuid, id: uuid.split('.').at(-1), name: uuid, type, documentName:'Actor', isOwner:true, ownership:{default:0},
@@ -72,4 +72,42 @@ test('failed credit refunds debit; failed refund gives reconciliation details',a
   await assert.rejects(transferMoney(hq,'a','deposit',10),/refunded/);assert.equal(actor.system.wealth.value,300);
   const update=actor.update;let writes=0;actor.update=async function(data){if(++writes===2)throw Error('refund');return update.call(this,data);};
   await assert.rejects(transferMoney(hq,'a','deposit',10),/reconcile 10eb/);
+});
+
+function rentSetup() {
+  hq.getFlag(ID,'hq').rent=100;hq.getFlag(ID,'hq').reducedRent=25;
+  stash.flags['cyberpunk-red-core']={'container-type':'stash'};
+  globalThis.Dialog={confirm:async()=>true};
+}
+test('monthly rent subtracts discount, floors at zero and ignores improvement rank',()=>{
+  assert.equal(benefits({rent:100,reducedRent:25}).monthlyRent,75);
+  assert.equal(benefits({rent:100,reducedRent:150}).monthlyRent,0);
+});
+test('rent debits only the linked HQ stash, without requiring an owned character',async()=>{
+  rentSetup();game.actors.contents=[];
+  await payRent(hq);assert.equal(stash.system.wealth.value,25);assert.equal(actor.system.wealth.value,300);
+  assert.match(stash.system.wealth.transactions[0][1],/monthly rent/);
+});
+test('rent cancellation and insufficient funds never debit',async()=>{
+  rentSetup();Dialog.confirm=async()=>false;await payRent(hq);assert.equal(stash.system.wealth.value,100);
+  Dialog.confirm=async()=>true;stash.system.wealth.value=10;await assert.rejects(payRent(hq),/Not enough/);assert.equal(stash.system.wealth.value,10);
+});
+test('rent rejects an unrelated sheet, missing stash and revoked access',async()=>{
+  rentSetup();hq.getFlag(ID,'hq').stashUuid=actor.uuid;await assert.rejects(payRent(hq),/shared stash/);
+  hq.getFlag(ID,'hq').stashUuid=stash.uuid;stash.flags[ID].headquarters='JournalEntry.other';await assert.rejects(payRent(hq),/shared stash/);
+  stash.flags[ID].headquarters=hq.uuid;stash.isOwner=false;await assert.rejects(payRent(hq),/Owner/);
+  stash.isOwner=true;hq.testUserPermission=()=>false;await assert.rejects(payRent(hq),/access/);
+  hq.testUserPermission=()=>true;docs.delete(stash.uuid);await assert.rejects(payRent(hq),/shared stash/);
+  assert.equal(actor.system.wealth.value,300);
+});
+test('rent rechecks changed price, permissions and funds after confirmation',async()=>{
+  rentSetup();Dialog.confirm=async()=>{hq.getFlag(ID,'hq').reducedRent=20;return true;};
+  await assert.rejects(payRent(hq),/changed/);assert.equal(stash.system.wealth.value,100);
+  Dialog.confirm=async()=>{stash.isOwner=false;return true;};await assert.rejects(payRent(hq),/Owner/);
+  stash.isOwner=true;Dialog.confirm=async()=>{stash.system.wealth.value=0;return true;};await assert.rejects(payRent(hq),/Not enough/);
+});
+test('rent shares transfer lock and failed writes release it',async()=>{
+  rentSetup();Dialog.confirm=async()=>{await assert.rejects(transferMoney(hq,'a','deposit',10),/progress/);return true;};
+  const update=stash.update;stash.update=async()=>{throw new Error('write failed');};await assert.rejects(payRent(hq),/write failed/);
+  stash.update=update;await payRent(hq);assert.equal(stash.system.wealth.value,25);
 });

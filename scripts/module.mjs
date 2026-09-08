@@ -36,7 +36,7 @@ export class HeadquartersSheet extends DocumentSheet {
     });
     html.find('[data-money]').on('click', async event => {
       event.preventDefault(); if (this._moneyBusy) return; this._moneyBusy = true;
-      try { await moneyDialog(this.document, event.currentTarget.dataset.money); this.render(false); }
+      try { if (this.isEditable) await this.submit(); await moneyDialog(this.document, event.currentTarget.dataset.money); this.render(false); }
       catch (e) { ui.notifications.error(e.message); } finally { this._moneyBusy = false; }
     });
     html.find("button[data-benefit]").on("click", async event => {

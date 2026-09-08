@@ -73,7 +73,7 @@ export function benefits(raw) {
     luck: active ? Number(m >= 3) + Number(m >= 7) : 0,
     lifestyle: active && s.improvements.morale ? 50 : 0,
     beds: s.beds + Math.max(0, s.improvements.rent - 1),
-    monthlyRent: active && s.improvements.rent ? s.reducedRent : s.rent,
+    monthlyRent: Math.max(0, s.rent - s.reducedRent),
     humanity: !active || m < 1 ? "None" : m >= 9 ? "2d6, keep highest" : m >= 4 ? "1d6" : "1d6 / 2 (round down)",
     hustle: !active || m < 6 ? "Normal" : m >= 8 ? "Roll twice; earn both" : "Roll twice; choose one",
     negotiation: active && m >= 5,

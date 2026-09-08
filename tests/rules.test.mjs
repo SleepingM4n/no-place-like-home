@@ -36,7 +36,7 @@ test("rent requires rent and permits exactly original-bed-count upgrades", () =>
   assert.throws(() => purchase(state({ip: 40}), "rent"), /monthly rent/);
   let s = state({ip: 500, rent: 3000, reducedRent: 2000, beds: 2});
   for (let i = 0; i < 3; i++) s = purchase(s, "rent");
-  assert.equal(benefits(s).beds, 4); assert.equal(benefits(s).monthlyRent, 2000);
+  assert.equal(benefits(s).beds, 4); assert.equal(benefits(s).monthlyRent, 1000);
   assert.throws(() => purchase(s, "rent"), /Maximum/);
 });
 test("morale replacement thresholds and stacking with medbay", () => {

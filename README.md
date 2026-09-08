@@ -25,7 +25,7 @@ As GM, open **Improvements & Upgrades â†’ Add custom improvement**. Enter a
 
 Acquired custom benefits appear in **Active Crew Benefits** while the crew has access. Their effects are descriptive and must be applied manually. **Edit custom** changes the definition and can add further tiers; it cannot remove tiers already purchased. **Lost** clears purchases but keeps the definition. **Delete custom** removes the custom card. Loss, deletion and HQ destruction do not refund spent IP. Creation, edits, purchases, losses and deletion are logged. Existing HQs need no migration.
 
-## Updating to 0.5.3
+## Updating to 0.5.4
 
 Close Foundry and replace the existing `Data/modules/no-place-like-home/` module files with the folder in the new ZIP. Restart Foundry and reload each player's browser. Existing Headquarters data is retained; no migration or recreation is needed.
 
@@ -138,3 +138,11 @@ Use **Active Crew Benefits → Pay lifestyle** to choose a character you own, re
 An active Morale Boost subtracts 50eb, resulting in 50/250/550/1450eb respectively. Without Morale Boost, the full price applies. The payment updates the Eurobucks balance and ledger together and posts a chat receipt. Insufficient funds, missing items, lost HQ access or revoked permissions stop payment. Each click pays one month; no calendar or once-per-month limit is enforced. Existing features and HQ data are retained.
 
 2026-09-08 — Changelog: Added Pay lifestyle to select an owned character, detect their lifestyle item, apply the 50eb Morale Boost discount, and debit the monthly cost from their Eurobucks ledger.
+
+## Rent payments (0.5.4)
+
+The Monthly rent square on HQ Info includes Pay. Monthly rent equals Original monthly rent minus Reduced rent (discount), with a minimum of zero, regardless of improvement ranks. Review existing Reduced rent values after updating: they now represent discounts, not final rent.
+
+Payment confirms one month and debits only the native stash created and linked to this HQ. Players need HQ Observer and stash Owner permissions (Sync player access). No character is charged. Insufficient funds, missing or unrelated stashes, changed rent or revoked permissions prevent payment. Payments are recorded in the stash ledger. There is no automatic calendar lock. Use one stash payment or transfer at a time across clients.
+
+2026-09-08 - Changelog: Added Pay inside the Monthly rent square on HQ Info; rent is Original monthly rent minus Reduced rent (minimum zero), and payment debits only the linked HQ stash. Existing Reduced rent values now represent discounts.

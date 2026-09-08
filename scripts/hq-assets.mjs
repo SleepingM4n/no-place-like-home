@@ -1,4 +1,4 @@
-import {ID, state} from "./rules.mjs";
+import {ID, state, benefits} from "./rules.mjs";
 import {escapeHTML, ownedCharacters, requireCharacter} from "./character-benefits.mjs";
 
 export function crewSlots(raw = []) { return Array.from({length: 6}, (_, i) => typeof raw[i] === "string" ? raw[i] : ""); }
@@ -25,6 +25,7 @@ export async function assetData(hq) {
   const garage = await linkView(s.garageUuid), stash = await resolveLink(s.stashUuid);
   const allowed = stash?.type === "container" && stash.testUserPermission(game.user, "OBSERVER");
   return {crew, garage, stash: allowed ? {name: stash.name, balance: stash.system.wealth.value, count: stash.items.size,
+    canPayRent: stash.isOwner && stash.getFlag(ID, 'headquarters') === hq.uuid && stash.getFlag('cyberpunk-red-core', 'container-type') === 'stash' && benefits(s).monthlyRent > 0,
     canTransfer: stash.isOwner && ownedCharacters().length > 0} : null, stashMissing: Boolean(s.stashUuid && !stash)};
 }
 export async function openLink(uuid) {
@@ -79,6 +80,31 @@ export function moneyUpdates(actor, delta, reason) {
   return {"system.wealth.value": value, "system.wealth.transactions": [...wallet.transactions.map(r => [...r]), [`${delta >= 0 ? "+" : ""}${delta}eb; balance ${value}eb`, reason]]};
 }
 const transfers = new Set();
+async function rentSource(hq) {
+  if (!hq.testUserPermission(game.user, 'OBSERVER')) throw new Error('You cannot access this HQ.');
+  const s = state(hq.getFlag(ID, 'hq')), stash = await resolveLink(s.stashUuid);
+  if (!stash || stash.documentName !== 'Actor' || stash.type !== 'container' || !stash.isOwner || stash.getFlag(ID, 'headquarters') !== hq.uuid || stash.getFlag('cyberpunk-red-core', 'container-type') !== 'stash') throw new Error('Create and sync this HQ’s shared stash first. You need Owner permission on it to pay rent.');
+  const current = state(hq.getFlag(ID, 'hq'));
+  if (current.stashUuid !== s.stashUuid || !hq.testUserPermission(game.user, 'OBSERVER')) throw new Error('HQ stash access changed. Review the payment again.');
+  if (![current.rent, current.reducedRent].every(x => Number.isSafeInteger(x) && x >= 0)) throw new Error('Enter valid non-negative whole rent amounts.');
+  const amount = benefits(current).monthlyRent;
+  if (amount <= 0) throw new Error('No rent is due.');
+  return {stash, amount};
+}
+export async function payRent(hq) {
+  const quote = await rentSource(hq);
+  if (transfers.has(quote.stash.uuid)) throw new Error('A stash payment or transfer is already in progress. Please wait.');
+  transfers.add(quote.stash.uuid);
+  try {
+    moneyUpdates(quote.stash, -quote.amount, 'Rent payment');
+    if (!await Dialog.confirm({title: 'Pay monthly rent', content: `<p>Pay ${quote.amount}eb for one month of ${escapeHTML(hq.name)} rent from ${escapeHTML(quote.stash.name)}?</p><p>Each payment covers one month. No automatic calendar limit is enforced.</p>`})) return;
+    const current = await rentSource(hq);
+    if (current.stash.uuid !== quote.stash.uuid || current.amount !== quote.amount) throw new Error('Rent or the linked stash changed. Review the payment again.');
+    await current.stash.update(moneyUpdates(current.stash, -current.amount, `${hq.name}: monthly rent — ${game.user.name}`));
+    ui.notifications.info(`Paid ${current.amount}eb rent from ${current.stash.name}.`);
+    return current.amount;
+  } finally { transfers.delete(quote.stash.uuid); }
+}
 export async function transferMoney(hq, actorId, direction, amount) {
   if (!hq.testUserPermission(game.user, "OBSERVER")) throw new Error("You cannot access this HQ.");
   if (!Number.isSafeInteger(amount) || amount <= 0 || !["deposit", "withdraw"].includes(direction)) throw new Error("Enter a positive whole amount of Eurobucks.");
@@ -102,6 +128,7 @@ export async function transferMoney(hq, actorId, direction, amount) {
   } finally { transfers.delete(stash.uuid); }
 }
 export async function moneyDialog(hq, direction) {
+  if (direction === 'rent') return payRent(hq);
   const actors = ownedCharacters();
   if (!actors.length) throw new Error("You need an owned character to transfer money.");
   const result = await new Promise(resolve => new Dialog({title: direction === "deposit" ? "Deposit Eurobucks" : "Withdraw Eurobucks",
